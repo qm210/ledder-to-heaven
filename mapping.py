@@ -1,4 +1,3 @@
-
 LOGO_W = 26
 LOGO_H = 12
 BASE_L = 18
@@ -49,3 +48,10 @@ def generate_mapping():
                 continue
             result[index] = i
     return result
+
+
+if __name__ == '__main__':
+    from pprint import pprint
+
+    mapping = generate_mapping()
+    pprint(mapping)

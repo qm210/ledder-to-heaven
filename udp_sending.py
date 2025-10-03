@@ -10,7 +10,6 @@ wled_host = '172.16.13.84'
 # ports 21234 and 65506 should be configured to work
 wled_port = 21234
 
-trophy_mapping = generate_mapping()
 
 def fill_sample_map(result: LedMap):
     base_color = (100, 30, 160)
@@ -26,12 +25,12 @@ def fill_sample_map(result: LedMap):
 
 debugged = False
 
-def warls_message(led_map: LedMap) -> bytearray:
+def warls_message(led_map: LedMap, timeout: int = 255) -> bytearray:
     global debugged
     # WARLS: [1, timeout, <LED index>, <LED R>, <LED G>, <LED B>, etc. for all LEDs]
-    message = [1, 255]
+    message = [1, timeout]
     for index, rgb in led_map.items():
-        message.append(trophy_mapping[index])
+        message.append(index)
         message.extend(rgb)
     if not debugged:
         print("[DEBUG] Message", message)
@@ -46,14 +45,18 @@ async def main():
         remote_addr=(wled_host, wled_port),
     )
     led_map = {}
-    while True:
+    running = True
+    while running:
         try:
             fill_sample_map(led_map)
-            transport.sendto(warls_message(led_map))
+            message = warls_message(led_map, timeout=5)
+            transport.sendto(message)
             await asyncio.sleep(1.)
         except KeyboardInterrupt:
             break
+        running = False
     transport.close()
+    print("Closed.")
 
 
 if __name__ == "__main__":
