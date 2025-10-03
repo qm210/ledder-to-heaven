@@ -1,6 +1,7 @@
 import asyncio
 from typing import Tuple, Dict
 
+from color import hue_to_rgb
 from mapping import generate_mapping
 
 LedMap = Dict[int, Tuple[int, int, int]]
@@ -23,18 +24,18 @@ def fill_sample_map(result: LedMap):
     result[171] = (210, 210, 210)
 
 
-debugged = False
+def fill_rainwbow_map(result: LedMap, step: int):
+    # ignore back/floor LED for this
+    for i in range(170):
+        result[i] = hue_to_rgb(0.05 * (i - step))
+
 
 def warls_message(led_map: LedMap, timeout: int = 255) -> bytearray:
-    global debugged
     # WARLS: [1, timeout, <LED index>, <LED R>, <LED G>, <LED B>, etc. for all LEDs]
     message = [1, timeout]
     for index, rgb in led_map.items():
         message.append(index)
         message.extend(rgb)
-    if not debugged:
-        print("[DEBUG] Message", message)
-        debugged = True
     return bytearray(message)
 
 
@@ -46,17 +47,18 @@ async def main():
     )
     led_map = {}
     running = True
+    step = 0
     while running:
         try:
-            fill_sample_map(led_map)
+            fill_rainwbow_map(led_map, step)
             message = warls_message(led_map, timeout=5)
             transport.sendto(message)
-            await asyncio.sleep(1.)
+            await asyncio.sleep(0.1)
         except KeyboardInterrupt:
-            break
-        running = False
+            running = False
+        step += 1
     transport.close()
-    print("Closed.")
+    print("Gone.")
 
 
 if __name__ == "__main__":
